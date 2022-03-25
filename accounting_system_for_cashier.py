@@ -3,8 +3,6 @@ import csv
 
 def currency() -> list[str]:
     with open('currency.csv', 'r', encoding='utf8') as f:
-        # fieldnames = ['rateUSD', 'availableUSD', 'rateUAH', 'availableUAH']
-        # reader = csv.DictReader(f, delimiter=';', quoting=csv.QUOTE_NONE)
         reader = csv.DictReader(f)
         data = [dict(row) for row in reader]
         return data
@@ -13,47 +11,103 @@ def currency() -> list[str]:
 class AccountingSystem:
 
     def __init__(self):
-        while True:
-            self.input_foo()
+        self.reader = self.read_foo()
+        self.input_user = self.user_input()
+        self.split_input = self.input_user.split()
+        self.input_foo()
 
     def input_foo(self):
-        self.user_input().upper()
-        print('tyt problema?')
-        if self.user_input == 'COURSE USD': # ?? шо не так    :(
-            print('mb tyt problema')
+        if self.input_user == 'COURSE USD':
             return self.course_usd()
-        elif self.user_input == 'COURSE UAH':
+        elif self.input_user == 'COURSE UAH':
             return self.course_uah()
-        elif self.user_input == 'STOP':
-            return None
+        elif self.split_input[0] == 'EXCHANGE':
+            if self.split_input[1] == 'USD':
+                return self.exchange_usd()
+            elif self.split_input[1] == 'UAH':
+                return self.exchange_uah()
+            else:
+                return self.some_else()
+        elif self.input_user == 'STOP':
+            print('SERVICE STOPPED')
         else:
-            return self.course_else()
+            return self.some_else()
 
-    def course_else(self):
-        self.user_input().split()
-        if len(self.user_input()) == 2 and self.user_input()[0] == 'COURSE':
-            print('INVALID CURRENCY ', self.user_input()[1])
+    def exchange_usd(self):
+        if self.split_input[-1].isdigit():
+            trade = int(self.split_input[-1]) * float(self.my_file()['rateUSD'])
+            if trade <= float(self.my_file()['availableUAH']):
+                self.read_foo()
+                self.reader[1][1] = float(self.my_file()['availableUSD']) + int(self.split_input[-1])
+                self.reader[1][3] = float(self.my_file()['availableUAH']) - trade
+                self.write_foo()
+                print(f'UAH {round(trade, 2)}, RATE {self.my_file()["rateUSD"]}')
+                return self.__init__()
+            else:
+                print(f'UNAVAILABLE, REQUIRED BALANCE UAH {round(trade, 2)}, '
+                      f'AVAILABLE {self.my_file()["availableUAH"]}')
+                return self.__init__()
+        else:
+            return self.some_else()
+
+    def exchange_uah(self):
+        if self.split_input[-1].isdigit():
+            trade = int(self.split_input[-1]) * float(self.my_file()['rateUAH'])
+            if trade <= float(self.my_file()['availableUSD']):
+                self.read_foo()
+                self.reader[1][3] = round(float(self.my_file()['availableUAH']), 3) + int(self.split_input[-1])
+                self.reader[1][1] = round(float(self.my_file()['availableUSD']), 3) - trade
+                self.write_foo()
+                print(f'USD {round(trade, 2)}, RATE {self.my_file()["rateUAH"]}')
+                return self.__init__()
+            else:
+                print(f'UNAVAILABLE, REQUIRED BALANCE USD {round(trade, 2)}, '
+                      f'AVAILABLE {self.my_file()["availableUSD"]}')
+                return self.__init__()
+        else:
+            return self.some_else()
+
+    def read_foo(self):
+        with open('currency.csv', 'r', encoding='utf8') as f:
+            reader = csv.reader(f)
+            readers = list(reader)
+            while True:
+                try:
+                    readers.remove([])
+                except ValueError:
+                    break
+            return readers
+
+    def write_foo(self):
+        with open('currency.csv', 'w') as f:
+            writer = csv.writer(f)
+            writer.writerows(self.reader)
+
+    def some_else(self):
+        if len(self.split_input) == 2 and self.split_input[0] == 'COURSE':
+            print('INVALID CURRENCY ', self.split_input[1])
             return self.__init__()
         else:
-            print(f'Invalid input {self.user_input()}')
+            print(f'Invalid input {self.input_user}')
             return self.__init__()
 
     def course_uah(self):
-        for dict_ in currency():
-            print(f'RATE: {dict_["rateUAH"]}, AVAILABLE: {dict_["availableUAH"]}')
+        print(f'RATE: {self.my_file()["rateUAH"]}, AVAILABLE: {self.my_file()["availableUAH"]}')
         return self.__init__()
 
     def course_usd(self):
-        for dict_ in currency():
-            print(f'RATE: {dict_["rateUSD"]}, AVAILABLE: {dict_["availableUSD"]}')
-            if self.user_input() == 'COURSE USD':
-                print('rabotaesh?')
+        print(f'RATE: {self.my_file()["rateUSD"]}, AVAILABLE: {self.my_file()["availableUSD"]}')
         return self.__init__()
+
+    def my_file(self):
+        for dict_ in currency():
+            return dict_
 
     def user_input(self):
         print('COMMAND?')
-        # inputer = input('Input your command: ')
-        return input('Input your command: ')
+        inputted = input('Input your command: ')
+        return inputted.upper()
+
 
 if __name__ in '__main__':
     account_sys = AccountingSystem()
